@@ -1,16 +1,95 @@
-import React from 'react';
-import { StyleSheet, Text, View, Button, TouchableOpacity,Alert } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, TextInput, Button } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { AuthContext } from './AuthContext';
+import { addPlant, getPlants } from './api';
 
-function PlantsScreen({ navigation }) {
+export default function PlantsScreen({ navigation }) {
+  const [plants, setPlants] = useState([]);
+  const [modalVisible, setModalVisible] = useState(false); // Состояние модального окна
+  const [plantName, setPlantName] = useState(''); // Название растения
+  const [plantDescription, setPlantDescription] = useState(''); // Описание растения
+  const { userToken } = React.useContext(AuthContext);
+
+  useEffect(() => {
+    fetchPlants();
+  }, []);
+
+  const fetchPlants = async () => {
+    try {
+      // getPlants(userToken);
+      console.error(getPlants(userToken).then(response=>{ return response.data;}));
+      setPlants();
+    } catch (error) {
+      console.error('Ошибка получения растений:', error.response?.data || error.message);
+    }
+  };
+
+  const handleAddPlant = async () => {
+    try {
+      if (!plantName.trim() || !plantDescription.trim()) {
+        alert('Пожалуйста, заполните все поля.');
+        return;
+      }
+
+      await addPlant(userToken, plantName, plantDescription);
+      setPlants((prevPlants) => [
+        ...prevPlants,
+        { id: Date.now(), name: plantName, description: plantDescription }, // Временная запись для обновления UI
+      ]);
+      setModalVisible(false); // Закрываем модальное окно
+      alert('Растение успешно добавлено!');
+      fetchPlants(); // Обновляем данные с сервера
+    } catch (error) {
+      console.error('Ошибка добавления растения:', error.response?.data || error.message);
+      alert('Не удалось добавить растение.');
+    }
+  };
+
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>Мои растения</Text>
-      {/* Здесь будет список растений */}
-      
-      <TouchableOpacity style={styles.fab} onPress={() => Alert.alert('Добавить растение', 'Здесь будет форма для добавления растения')}>
+      <FlatList
+        data={plants}
+        keyExtractor={(item) => item.id.toString()}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.plantItem} onPress={() => alert(`Нажато на растение: ${item.name}`)}>
+            <Text style={styles.plantName}>{item.name}</Text>
+            <Text style={styles.plantDescription}>{item.description}</Text>
+          </TouchableOpacity>
+        )}
+        ListEmptyComponent={<Text>Нет растений</Text>}
+      />
+
+      {/* Кнопка "Добавить растение" */}
+      <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
         <MaterialCommunityIcons name="plus" size={30} color="white" />
       </TouchableOpacity>
+
+      {/* Модальное окно для добавления растения */}
+      <Modal visible={modalVisible} animationType="slide" transparent={true}>
+        <View style={styles.modalContainer}>
+          <View style={styles.modalContent}>
+            <Text style={styles.modalTitle}>Добавить растение</Text>
+            <TextInput
+              placeholder="Название"
+              value={plantName}
+              onChangeText={setPlantName}
+              style={styles.input}
+            />
+            <TextInput
+              placeholder="Описание"
+              value={plantDescription}
+              onChangeText={setPlantDescription}
+              style={styles.input}
+              multiline
+            />
+            <View style={styles.modalButtons}>
+              <Button title="Отмена" onPress={() => setModalVisible(false)} />
+              <Button title="Добавить" onPress={handleAddPlant} />
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -21,23 +100,69 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: '#f5f5f5',
+    padding: 10,
   },
-  title: {
-    fontSize: 24,
-    marginBottom: 20,
+  plantItem: {
+    width: '100%',
+    padding: 15,
+    marginBottom: 10,
+    backgroundColor: '#fff',
+    borderRadius: 5,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 2,
+    elevation: 2,
+  },
+  plantName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  plantDescription: {
+    fontSize: 14,
+    color: '#666',
   },
   fab: {
     position: 'absolute',
+    bottom: 20,
+    right: 20,
+    backgroundColor: '#007BFF',
     width: 60,
     height: 60,
-    alignItems: 'center',
-    justifyContent: 'center',
-    right: 30,
-    bottom: 30,
-    backgroundColor: '#007BFF',
     borderRadius: 30,
+    justifyContent: 'center',
+    alignItems: 'center',
     elevation: 8,
   },
+  modalContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    padding: 20,
+    borderRadius: 10,
+    width: '80%',
+  },
+  modalTitle: {
+    fontSize: 20,
+    fontWeight: 'bold',
+    marginBottom: 15,
+    textAlign: 'center',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#ccc',
+    borderRadius: 5,
+    padding: 10,
+    marginBottom: 15,
+    width: '100%',
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+  },
 });
-
-export default PlantsScreen;

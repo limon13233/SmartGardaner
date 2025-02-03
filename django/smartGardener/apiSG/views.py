@@ -37,7 +37,6 @@ class LoginView(generics.GenericAPIView):
             return Response({'error': 'Please provide both username and password'}, status=status.HTTP_400_BAD_REQUEST)
 
         user = authenticate(username=username, password=password)
-        # return Response({'error': f'{user}'}, status=status.HTTP_400_BAD_REQUEST)
         if not user:
             return Response({'error': 'Invalid Credentials'}, status=status.HTTP_404_NOT_FOUND)
 

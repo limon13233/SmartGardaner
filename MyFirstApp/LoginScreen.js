@@ -1,17 +1,22 @@
 import React, { useState } from 'react';
 import { StyleSheet, Text, View, TextInput, Button, TouchableOpacity, Alert } from 'react-native';
+import { loginUser } from './api';
+import { saveToken } from './storage';
 
 function LoginScreen({ navigation }) {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const handleLogin = () => {
-    if (username && password) {
-      // Здесь будет логика проверки логина и пароля
-      // Пока что просто переходим на основное окно
-      navigation.navigate('App');
-    } else {
-      Alert.alert('Ошибка', 'Пожалуйста, заполните все поля');
+  const handleLogin = async () => {
+    try {
+      const token = await loginUser(username, password);
+      await saveToken(token);
+      console.error('1'); // Сохраняем токен
+      navigation.navigate('Home');
+      console.error('2'); // Переходим на главный экран
+    } catch (error) {
+      Alert.alert('Ошибка', 'Неверное имя пользователя или пароль');
+      console.error(error);
     }
   };
 

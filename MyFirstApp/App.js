@@ -1,13 +1,15 @@
+// App.js
 import 'react-native-gesture-handler';
-import React, { useState, useEffect } from 'react';
+import React from 'react';
+import { useFocusEffect } from '@react-navigation/native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { useFocusEffect } from '@react-navigation/native';
+import { AuthProvider, AuthContext } from './AuthContext'; // Импортируем контекст аутентификации
 
 // Компоненты экранов
-import LoginScreen from './LoginScreen'; // Предполагаем, что у вас есть этот компонент
+import LoginScreen from './LoginScreen';
 import PlantsScreen from './PlantsScreen';
 import SensorsScreen from './SensorsScreen';
 import NotificationsScreen from './NotificationsScreen';
@@ -19,7 +21,7 @@ const Stack = createStackNavigator();
 const Tab = createBottomTabNavigator();
 
 function HomeTabs({ navigation }) {
-  const [title, setTitle] = useState('Растения');
+  const [title, setTitle] = React.useState('Растения');
 
   useFocusEffect(
     React.useCallback(() => {
@@ -35,7 +37,8 @@ function HomeTabs({ navigation }) {
     }, [navigation])
   );
 
-  useEffect(() => {
+  // Обновляем заголовок стека
+  React.useEffect(() => {
     navigation.setOptions({
       title: title,
     });
@@ -55,7 +58,7 @@ function HomeTabs({ navigation }) {
 
           return <MaterialCommunityIcons name={iconName} size={size} color={color} />;
         },
-        headerShown: false, // Скрываем заголовки для вкладок
+        headerShown: false, // Убираем заголовок для вкладок
       })}
       tabBarOptions={{
         activeTintColor: 'tomato',
@@ -70,10 +73,15 @@ function HomeTabs({ navigation }) {
 
 function AppStack() {
   return (
-    <Stack.Navigator>
-      <Stack.Screen 
-        name="Home" 
-        component={HomeTabs} 
+    <Stack.Navigator
+      screenOptions={{
+        headerStyle: { backgroundColor: '#fff' }, // Опционально: стиль хедера
+        headerTintColor: '#000', // Опционально: цвет текста
+      }}
+    >
+      <Stack.Screen
+        name="Home"
+        component={HomeTabs}
         options={({ navigation }) => ({
           headerRight: () => (
             <MaterialCommunityIcons
@@ -84,21 +92,36 @@ function AppStack() {
               onPress={() => navigation.navigate('Notifications')}
             />
           ),
-          headerShown: true // Убедитесь, что заголовок отображается
-        })} 
+          headerShown: true, // Показываем только один общий хедер
+        })}
       />
-      <Stack.Screen name="Notifications" component={NotificationsScreen} />
+      <Stack.Screen
+        name="Notifications"
+        component={NotificationsScreen}
+        options={{ title: 'Уведомления' }} // Заголовок для экрана уведомлений
+      />
     </Stack.Navigator>
   );
 }
 
 export default function App() {
   return (
-    <NavigationContainer>
-      <Stack.Navigator initialRouteName="Login">
-        <Stack.Screen name="Login" component={LoginScreen} options={{ headerShown: false }} />
-        <Stack.Screen name="App" component={AppStack} options={{ headerShown: false }} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <AuthProvider>
+      <NavigationContainer>
+        <AuthCheck />
+      </NavigationContainer>
+    </AuthProvider>
   );
+}
+
+function AuthCheck() {
+  const { userToken } = React.useContext(AuthContext);
+
+  // Если пользователь не авторизован, показываем экран входа
+  if (!userToken) {
+    return <LoginScreen />;
+  }
+
+  // Если пользователь авторизован, показываем основной экран
+  return <AppStack />;
 }
