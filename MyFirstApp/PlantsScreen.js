@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, TextInput, Button } from 'react-native';
+import React, { useState, useEffect, useContext } from 'react';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, TextInput, Button, ActivityIndicator } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AuthContext } from './AuthContext';
 import { addPlant, getPlants } from './api';
@@ -9,19 +9,24 @@ export default function PlantsScreen({ navigation }) {
   const [modalVisible, setModalVisible] = useState(false); // Состояние модального окна
   const [plantName, setPlantName] = useState(''); // Название растения
   const [plantDescription, setPlantDescription] = useState(''); // Описание растения
-  const { userToken } = React.useContext(AuthContext);
+  const [loading, setLoading] = useState(true); // Состояние загрузки
+  const { userToken } = useContext(AuthContext);
 
   useEffect(() => {
-    fetchPlants();
-  }, []);
+    if (userToken) {
+      fetchPlants();
+    }
+  }, [userToken]);
 
   const fetchPlants = async () => {
     try {
-      // getPlants(userToken);
-      console.error(getPlants(userToken).then(response=>{ return response.data;}));
-      setPlants();
+      setLoading(true);
+      const plantsData = await getPlants(userToken);
+      setPlants(plantsData);
     } catch (error) {
       console.error('Ошибка получения растений:', error.response?.data || error.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -45,6 +50,15 @@ export default function PlantsScreen({ navigation }) {
       alert('Не удалось добавить растение.');
     }
   };
+
+  if (loading) {
+    return (
+      <View style={styles.loadingContainer}>
+        <ActivityIndicator size="large" color="#007BFF" />
+        <Text>Загрузка...</Text>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -164,5 +178,10 @@ const styles = StyleSheet.create({
   modalButtons: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });

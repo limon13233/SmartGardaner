@@ -1,7 +1,5 @@
-// App.js
 import 'react-native-gesture-handler';
-import React from 'react';
-import { useFocusEffect } from '@react-navigation/native';
+import React, { useEffect } from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
@@ -10,9 +8,12 @@ import { AuthProvider, AuthContext } from './AuthContext'; // Импортиру
 
 // Компоненты экранов
 import LoginScreen from './LoginScreen';
+import RegisterScreen from './RegisterScreen'; // Импортируем экран регистрации
 import PlantsScreen from './PlantsScreen';
 import SensorsScreen from './SensorsScreen';
 import NotificationsScreen from './NotificationsScreen';
+import { View } from 'react-native-web';
+import { useNavigation } from '@react-navigation/native';
 
 // Стэк для основного приложения
 const Stack = createStackNavigator();
@@ -20,30 +21,7 @@ const Stack = createStackNavigator();
 // Нижний навигатор
 const Tab = createBottomTabNavigator();
 
-function HomeTabs({ navigation }) {
-  const [title, setTitle] = React.useState('Растения');
-
-  useFocusEffect(
-    React.useCallback(() => {
-      const unsubscribe = navigation.addListener('tabPress', (e) => {
-        if (e.target === 'Растения') {
-          setTitle('Растения');
-        } else if (e.target === 'Датчики') {
-          setTitle('Датчики');
-        }
-      });
-
-      return unsubscribe;
-    }, [navigation])
-  );
-
-  // Обновляем заголовок стека
-  React.useEffect(() => {
-    navigation.setOptions({
-      title: title,
-    });
-  }, [title, navigation]);
-
+function HomeTabs() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
@@ -72,6 +50,19 @@ function HomeTabs({ navigation }) {
 }
 
 function AppStack() {
+  const { logout } = React.useContext(AuthContext);
+  const navigation = useNavigation();
+
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('state', (e) => {
+      if (e.data.state.index === 0 && e.data.state.routes[0].name === 'Login') {
+        logout();
+      }
+    });
+
+    return unsubscribe;
+  }, [navigation]);
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -84,13 +75,24 @@ function AppStack() {
         component={HomeTabs}
         options={({ navigation }) => ({
           headerRight: () => (
-            <MaterialCommunityIcons
-              name="bell"
-              size={24}
-              color="black"
-              style={{ marginRight: 15 }}
-              onPress={() => navigation.navigate('Notifications')}
-            />
+            <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+              <MaterialCommunityIcons
+                name="bell"
+                size={24}
+                color="black"
+                style={{ marginRight: 15 }}
+                onPress={() => navigation.navigate('Notifications')}
+              />
+              <MaterialCommunityIcons
+                name="logout"
+                size={24}
+                color="black"
+                onPress={async () => {
+                  await logout(); // Вызываем метод logout
+                  navigation.reset({ index: 0, routes: [{ name: 'Login' }] }); // Переходим на экран входа
+                }}
+              />
+            </View>
           ),
           headerShown: true, // Показываем только один общий хедер
         })}
@@ -115,11 +117,28 @@ export default function App() {
 }
 
 function AuthCheck() {
-  const { userToken } = React.useContext(AuthContext);
+  const { userToken, loading } = React.useContext(AuthContext);
+
+  if (loading) {
+    return null; // Показываем загрузку или пустой экран, пока токен загружается
+  }
 
   // Если пользователь не авторизован, показываем экран входа
   if (!userToken) {
-    return <LoginScreen />;
+    return (
+      <Stack.Navigator>
+        <Stack.Screen
+          name="Login"
+          component={LoginScreen}
+          options={{ headerShown: false }} // Скрываем хедер для экрана входа
+        />
+        <Stack.Screen
+          name="Register"
+          component={RegisterScreen}
+          options={{ headerShown: false }} // Скрываем хедер для экрана регистрации
+        />
+      </Stack.Navigator>
+    );
   }
 
   // Если пользователь авторизован, показываем основной экран

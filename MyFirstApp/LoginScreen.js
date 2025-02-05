@@ -1,23 +1,30 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { StyleSheet, Text, View, TextInput, Button, TouchableOpacity, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { AuthContext } from './AuthContext';
 import { loginUser } from './api';
 import { saveToken } from './storage';
 
-function LoginScreen({ navigation }) {
+function LoginScreen() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
+  const navigation = useNavigation();
+  const { login } = useContext(AuthContext);
 
   const handleLogin = async () => {
     try {
       const token = await loginUser(username, password);
       await saveToken(token);
-      console.error('1'); // Сохраняем токен
-      navigation.navigate('Home');
-      console.error('2'); // Переходим на главный экран
+      login(token); // Сохраняем токен в контексте
+      navigation.navigate('Home'); // Переходим на главный экран
     } catch (error) {
       Alert.alert('Ошибка', 'Неверное имя пользователя или пароль');
       console.error(error);
     }
+  };
+
+  const handleRegister = () => {
+    navigation.navigate('Register');
   };
 
   return (
@@ -38,6 +45,9 @@ function LoginScreen({ navigation }) {
       />
       <TouchableOpacity style={styles.button} onPress={handleLogin}>
         <Text style={styles.buttonText}>Войти</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={styles.button} onPress={handleRegister}>
+        <Text style={styles.buttonText}>Зарегистрироваться</Text>
       </TouchableOpacity>
     </View>
   );
@@ -69,6 +79,7 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
     paddingHorizontal: 20,
     borderRadius: 5,
+    margin: 5,
   },
   buttonText: {
     color: '#fff',

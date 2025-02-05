@@ -4,15 +4,16 @@ import axios from 'axios';
 const API_URL = 'http://172.20.10.7:8000/api/';
 
 // Функция для регистрации пользователя
-export const registerUser = async (username, password, email, phone_number) => {
+export const registerUser = async (name,username, password, email, phone_number) => {
   try {
     const response = await axios.post(`${API_URL}register/`, {
+      name,
       username,
       password,
       email,
       phone_number,
     });
-    return response.data;
+    return response.data.token; // Возвращаем токен (если он есть)
   } catch (error) {
     console.error('Ошибка регистрации:', error.response?.data || error.message);
     throw error;
