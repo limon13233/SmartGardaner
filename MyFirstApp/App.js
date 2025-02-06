@@ -12,7 +12,7 @@ import RegisterScreen from './RegisterScreen'; // Импортируем экр�
 import PlantsScreen from './PlantsScreen';
 import SensorsScreen from './SensorsScreen';
 import NotificationsScreen from './NotificationsScreen';
-import { View } from 'react-native-web';
+import { View } from 'react-native'; // Используем View из react-native
 import { useNavigation } from '@react-navigation/native';
 
 // Стэк для основного приложения
@@ -85,6 +85,7 @@ function AppStack() {
               />
               <MaterialCommunityIcons
                 name="logout"
+                style={{marginRight:15}}
                 size={24}
                 color="black"
                 onPress={async () => {

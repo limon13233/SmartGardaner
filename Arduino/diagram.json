@@ -1,0 +1,48 @@
+{
+    "version": 1,
+    "author": "Андрей Алексеевич Рулев",
+    "editor": "wokwi",
+    "parts": [
+      {
+        "type": "wokwi-breadboard",
+        "id": "bb1",
+        "top": 0,
+        "left": 0,
+        "attrs": {}
+      },
+      {
+        "type": "wokwi-arduino-uno",
+        "id": "uno",
+        "top": 0,
+        "left": 200,
+        "attrs": {}
+      },
+      {
+        "type": "wokwi-relay-module",
+        "id": "relay1",
+        "top": 100,
+        "left": 400,
+        "attrs": {}
+      },
+      {
+        "type": "wokwi-led",
+        "id": "led1",
+        "top": 150,
+        "left": 500,
+        "attrs": { "color": "red" }
+      }
+    ],
+    "connections": [
+      [ "uno:5V", "relay1:VCC", "red", [ "h100" ] ],
+      [ "uno:GND.1", "relay1:GND", "black", [ "h100" ] ],
+      [ "uno:7", "relay1:IN", "green", [ "h100" ] ],
+      [ "relay1:NO", "led1:A", "green", [ "h50" ] ],
+      [ "led1:C", "uno:GND.1", "black", [ "v-50", "h-100" ] ]
+    ],
+    "code": {
+      "uno": {
+        "source": "// Arduino code to blink an LED using a relay\n\nconst int RELAY_PIN = 7;\n\nvoid setup() {\n  pinMode(RELAY_PIN, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(RELAY_PIN, HIGH);\n  delay(1000); // LED on for 1 second\n  digitalWrite(RELAY_PIN, LOW);\n  delay(1000); // LED off for 1 second\n}"
+      }
+    }
+  }
+  

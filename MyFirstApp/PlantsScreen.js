@@ -111,13 +111,11 @@ export default function PlantsScreen({ navigation }) {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
     backgroundColor: '#f5f5f5',
     padding: 10,
   },
   plantItem: {
-    width: '100%',
+    flex: 1,
     padding: 15,
     marginBottom: 10,
     backgroundColor: '#fff',
@@ -129,11 +127,13 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   plantName: {
+    textAlign:'center',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 5,
   },
   plantDescription: {
+    textAlign:'center',
     fontSize: 14,
     color: '#666',
   },
