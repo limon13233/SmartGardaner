@@ -1,2 +1,5 @@
 # SmartGardaner
 Smart Gardener — это инновационное решение для автоматизации ухода за растениями с использованием технологий Интернета вещей (IoT). Это проект состоит из двух основных частей: серверного API на Django REST Framework и мобильного приложения на React Native с Expo.
+
+# Не полная схема на базе ардуино для полива растений и проветривания(с помощью вентилятора)
+https://www.tinkercad.com/things/9uLrDHgJi1b-powerful-crift/editel?returnTo=https%3A%2F%2Fwww.tinkercad.com%2Fdashboard
