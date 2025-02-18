@@ -1,4 +1,0 @@
-[wokwi]
-version = 1
-firmware = 'diagram.json'
-elf = 'code.ino'

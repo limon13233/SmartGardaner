@@ -66,7 +66,7 @@ export default function PlantsScreen({ navigation }) {
         data={plants}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.plantItem} onPress={() => alert(`Нажато на растение: ${item.name}`)}>
+          <TouchableOpacity style={styles.plantItem} onPress={() => alert(`${item.name}\n${item.description}`)}>
             <Text style={styles.plantName}>{item.name}</Text>
             <Text style={styles.plantDescription}>{item.description}</Text>
           </TouchableOpacity>
