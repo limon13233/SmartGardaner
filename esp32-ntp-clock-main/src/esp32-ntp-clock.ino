@@ -6,7 +6,7 @@
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 #include <DHT.h>
-//#include <HTTPClient.h> // Библиотека для работы с HTTP-запросами
+#include <HTTPClient.h> // Библиотека для работы с HTTP-запросами
 
 // Настройка LCD
 LiquidCrystal_I2C LCD = LiquidCrystal_I2C(0x27, 16, 2);
@@ -21,7 +21,7 @@ const char* ssid = "Wokwi-GUEST"; // SSID сети Wi-Fi
 const char* password = ""; // Пароль сети Wi-Fi
 
 // Настройка API
-const char* api_url = "http://172.20.10.7:8000/api/sensor-values/"; // URL вашего Django API
+const char* api_url = "http://localhost:8000/api/sensor-values/"; // URL вашего Django API
 const char* sensor_id = "1"; // ID датчика (замените на актуальное значение)
 const char* token = "1125cb15f8412610e351eca346d5918e0688a34c"; // Токен аутентификации пользователя
 
@@ -36,45 +36,40 @@ void spinner() {
 }
 
 void sendSensorDataToAPI(float humidity, float temperature) {
-  // Создаем HTTP-клиент
-  //HTTPClient http;
+  WiFiClient client;
+  if (client.connect("172.20.10.7", 8000)) {
+    Serial.println("Connected to API");
 
-  // Формируем JSON-данные
-  String postData = "{ \"sensor\": " + String(sensor_id) + ", \"value\": " + String(humidity, 2) + " }";
+    String postData = "{\"sensor\": " + String(sensor_id) + ", \"value\": " + String(temperature) + ", \"timestamp\": \"" + String(millis()) + "\"}";
+    String postRequest = String("POST ") + "/api/sensor-values/ HTTP/1.1\r\n" +
+                         "Host: 172.20.10.7\r\n" +
+                         "Authorization: Token " + String(token) + "\r\n" +
+                         "Content-Type: application/json\r\n" +
+                         "Content-Length: " + postData.length() + "\r\n" +
+                         "Connection: close\r\n\r\n" +
+                         postData;
 
-  // Отправляем данные на сервер
-  //http.begin(api_url); // Указываем URL API
-  //http.addHeader("Content-Type", "application/json");
-  //http.addHeader("Authorization", "Token " + String(token));
+    client.print(postRequest);
 
-  //int httpResponseCode = http.POST(postData);
+    unsigned long timeout = millis();
+    while (client.available() == 0) {
+      if (millis() - timeout > 5000) {
+        Serial.println(">>> Client Timeout !");
+        client.stop();
+        return;
+      }
+    }
 
-  //if (httpResponseCode > 0) {
-  //   Serial.printf("[HTTP] POST... code: %d\n", httpResponseCode);
-  //   String response = http.getString();
-  //   Serial.println(response);
+    while (client.available()) {
+      String line = client.readStringUntil('\r');
+      Serial.print(line);
+    }
 
-  //   // Выводим успех на LCD
-  //   LCD.clear();
-  //   LCD.setCursor(0, 0);
-  //   LCD.print("Data sent!");
-  //   LCD.setCursor(0, 1);
-  //   LCD.print("Hum:");
-  //   LCD.print(humidity);
-  //   LCD.print(" %");
-  // } else {
-  //   Serial.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpResponseCode).c_str());
-
-  //   // Выводим ошибку на LCD
-  //   LCD.clear();
-  //   LCD.setCursor(0, 0);
-  //   LCD.print("Error sending data");
-  //   LCD.setCursor(0, 1);
-  //   LCD.print("Check connection");
-  // }
-
-  // // Закрываем соединение
-  // http.end();
+    Serial.println();
+    Serial.println("Closing connection");
+  } else {
+    Serial.println("Connection to API failed");
+  }
 }
 
 void printSensorData() {
