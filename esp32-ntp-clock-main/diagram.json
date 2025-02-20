@@ -6,13 +6,6 @@
     { "type": "wokwi-breadboard-mini", "id": "bb1", "top": 152.2, "left": 84, "attrs": {} },
     { "type": "board-esp32-devkit-c-v4", "id": "esp", "top": -76.8, "left": 43.24, "attrs": {} },
     {
-      "type": "wokwi-lcd1602",
-      "id": "lcd1",
-      "top": -70.4,
-      "left": 188,
-      "attrs": { "pins": "i2c" }
-    },
-    {
       "type": "wokwi-dht22",
       "id": "dht1",
       "top": -95.7,
@@ -26,22 +19,29 @@
       "left": 95.45,
       "rotate": 90,
       "attrs": { "value": "10000" }
+    },
+    {
+      "type": "board-ssd1306",
+      "id": "oled1",
+      "top": -160.06,
+      "left": 192.23,
+      "attrs": { "i2cAddress": "0x3c" }
     }
   ],
   "connections": [
     [ "esp:TX", "$serialMonitor:RX", "", [] ],
     [ "esp:RX", "$serialMonitor:TX", "", [] ],
-    [ "lcd1:SDA", "esp:21", "green", [ "v-4.49", "h-28.8", "v23.89" ] ],
-    [ "lcd1:GND", "esp:GND.2", "black", [ "h-16.67", "v162.78" ] ],
-    [ "lcd1:VCC", "esp:3V3", "red", [ "h-9.6", "v-57.5", "h-134.55" ] ],
-    [ "lcd1:SCL", "esp:22", "purple", [ "h-19.2", "v-18.9" ] ],
     [ "esp:GND.1", "dht1:GND", "black", [ "h0" ] ],
     [ "dht1:VCC", "esp:5V", "red", [ "v0" ] ],
     [ "r1:2", "esp:5V", "green", [ "h0" ] ],
+    [ "bb1:4t.d", "dht1:SDA", "green", [ "v0" ] ],
+    [ "esp:5", "bb1:4t.a", "green", [ "h0" ] ],
     [ "r1:1", "bb1:4t.e", "", [ "$bb" ] ],
     [ "r1:2", "bb1:4b.i", "", [ "$bb" ] ],
-    [ "bb1:4t.d", "dht1:SDA", "green", [ "v0" ] ],
-    [ "esp:5", "bb1:4t.a", "green", [ "h0" ] ]
+    [ "esp:22", "oled1:SCL", "yellow", [ "h19.2", "v-134.4", "h86.1" ] ],
+    [ "esp:3V3", "oled1:VCC", "red", [ "h-38.25", "v-297.6", "h230.25" ] ],
+    [ "oled1:GND", "esp:GND.2", "black", [ "h-57.6", "v105.6" ] ],
+    [ "oled1:SDA", "esp:21", "green", [ "h57.67", "v153.6" ] ]
   ],
   "dependencies": {}
 }

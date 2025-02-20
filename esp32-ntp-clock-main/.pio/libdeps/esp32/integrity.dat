@@ -1,3 +1,6 @@
-marcoschwartz/LiquidCrystal_I2C@^1.1.4
-https://github.com/amcewen/HttpClient.git
 https://github.com/adafruit/DHT-sensor-library.git
+https://github.com/amcewen/HttpClient.git
+https://github.com/ricmoo/QRCode.git
+marcoschwartz/LiquidCrystal_I2C@^1.1.4
+https://github.com/adafruit/Adafruit_SSD1306.git
+https://github.com/adafruit/Adafruit-GFX-Library.git
