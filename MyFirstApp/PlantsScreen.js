@@ -1,15 +1,30 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, Modal, TextInput, Button, ActivityIndicator } from 'react-native';
+import {
+  View,
+  Text,
+  FlatList,
+  TouchableOpacity,
+  StyleSheet,
+  Modal,
+  TextInput,
+  Button,
+  ActivityIndicator,
+  ScrollView,
+  Alert,
+} from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AuthContext } from './AuthContext';
-import { addPlant, getPlants } from './api';
+import { addPlant, fetchPlantsFromAPI, getPlants, deletePlant } from './api';
 
 export default function PlantsScreen({ navigation }) {
   const [plants, setPlants] = useState([]);
-  const [modalVisible, setModalVisible] = useState(false); // Состояние модального окна
-  const [plantName, setPlantName] = useState(''); // Название растения
-  const [plantDescription, setPlantDescription] = useState(''); // Описание растения
-  const [loading, setLoading] = useState(true); // Состояние загрузки
+  const [modalVisible, setModalVisible] = useState(false);
+  const [plantName, setPlantName] = useState('');
+  const [plantDescription, setPlantDescription] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [apiPlants, setApiPlants] = useState([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [isFetchingApiPlants, setIsFetchingApiPlants] = useState(false);
   const { userToken } = useContext(AuthContext);
 
   useEffect(() => {
@@ -30,24 +45,75 @@ export default function PlantsScreen({ navigation }) {
     }
   };
 
-  const handleAddPlant = async () => {
+  const fetchApiPlants = async () => {
+    setIsFetchingApiPlants(true);
     try {
-      if (!plantName.trim() || !plantDescription.trim()) {
-        alert('Пожалуйста, заполните все поля.');
+      const apiPlantsData = await fetchPlantsFromAPI(searchQuery);
+      setApiPlants(apiPlantsData);
+    } catch (error) {
+      console.error('Ошибка получения растений из API:', error);
+    } finally {
+      setIsFetchingApiPlants(false);
+    }
+  };
+
+  const handleAddPlant = async (plant) => {
+    try {
+      if (!plant || !plant.common_name) {
+        alert('Пожалуйста, выберите растение.');
         return;
       }
 
-      await addPlant(userToken, plantName, plantDescription);
+      await addPlant(userToken, plant.common_name, plant.description || '');
       setPlants((prevPlants) => [
         ...prevPlants,
-        { id: Date.now(), name: plantName, description: plantDescription }, // Временная запись для обновления UI
+        { id: Date.now(), name: plant.common_name, description: plant.description || '' },
       ]);
-      setModalVisible(false); // Закрываем модальное окно
-      alert('Растение успешно добавлено!');
-      fetchPlants(); // Обновляем данные с сервера
+      alert(`Растение "${plant.common_name}" успешно добавлено!`);
+      setModalVisible(false);
+      fetchPlants();
     } catch (error) {
       console.error('Ошибка добавления растения:', error.response?.data || error.message);
       alert('Не удалось добавить растение.');
+    }
+  };
+
+  const handleDeletePlant = async (plantId) => {
+    try {
+      await deletePlant(userToken, plantId);
+      setPlants((prevPlants) => prevPlants.filter((plant) => plant.id !== plantId));
+      alert('Растение успешно удалено!');
+    } catch (error) {
+      console.error('Ошибка удаления растения:', error.response?.data || error.message);
+      alert('Не удалось удалить растение.');
+    }
+  };
+
+  const handleLongPress = (plantId) => {
+    Alert.alert(
+      'Удаление растения',
+      'Вы уверены, что хотите удалить это растение?',
+      [
+        {
+          text: 'Отмена',
+          style: 'cancel',
+        },
+        {
+          text: 'Удалить',
+          onPress: () => handleDeletePlant(plantId),
+          style: 'destructive',
+        },
+      ],
+      { cancelable: false }
+    );
+  };
+
+  const handleSearchChange = (text) => {
+    setSearchQuery(text);
+    if (text.length > 2) {
+      fetchApiPlants();
+    } else {
+      setApiPlants([]);
     }
   };
 
@@ -66,7 +132,11 @@ export default function PlantsScreen({ navigation }) {
         data={plants}
         keyExtractor={(item) => item.id.toString()}
         renderItem={({ item }) => (
-          <TouchableOpacity style={styles.plantItem} onPress={() => alert(`${item.name}\n${item.description}`)}>
+          <TouchableOpacity
+            style={styles.plantItem}
+            onPress={() => alert(`${item.name}\n${item.description}`)}
+            onLongPress={() => handleLongPress(item.id)}
+          >
             <Text style={styles.plantName}>{item.name}</Text>
             <Text style={styles.plantDescription}>{item.description}</Text>
           </TouchableOpacity>
@@ -74,16 +144,43 @@ export default function PlantsScreen({ navigation }) {
         ListEmptyComponent={<Text>Нет растений</Text>}
       />
 
-      {/* Кнопка "Добавить растение" */}
       <TouchableOpacity style={styles.fab} onPress={() => setModalVisible(true)}>
         <MaterialCommunityIcons name="plus" size={30} color="white" />
       </TouchableOpacity>
 
-      {/* Модальное окно для добавления растения */}
       <Modal visible={modalVisible} animationType="slide" transparent={true}>
         <View style={styles.modalContainer}>
           <View style={styles.modalContent}>
-            <Text style={styles.modalTitle}>Добавить растение</Text>
+            <Text style={styles.modalTitle}>Выберите или добавьте растение</Text>
+
+            <TextInput
+              placeholder="Поиск растений..."
+              value={searchQuery}
+              onChangeText={handleSearchChange}
+              style={styles.input}
+            />
+
+            {isFetchingApiPlants ? (
+              <ActivityIndicator size="small" color="#007BFF" style={styles.apiLoading} />
+            ) : (
+              <ScrollView style={styles.apiPlantsList}>
+                {apiPlants.map((item) => (
+                  <TouchableOpacity
+                    key={item.id}
+                    style={styles.apiPlantItem}
+                    onPress={() => handleAddPlant(item)}
+                  >
+                    <Text style={styles.apiPlantName}>{item.common_name}</Text>
+                    <Text style={styles.apiPlantScientificName}>{item.scientific_name?.join(', ') || 'Нет научного названия'}</Text>
+                  </TouchableOpacity>
+                ))}
+              </ScrollView>
+            )}
+
+            <View style={styles.divider}>
+              <Text style={styles.dividerText}>Или добавьте свое растение</Text>
+            </View>
+
             <TextInput
               placeholder="Название"
               value={plantName}
@@ -99,7 +196,11 @@ export default function PlantsScreen({ navigation }) {
             />
             <View style={styles.modalButtons}>
               <Button title="Отмена" onPress={() => setModalVisible(false)} />
-              <Button title="Добавить" onPress={handleAddPlant} />
+              <Button
+                title="Добавить"
+                onPress={() => handleAddPlant({ common_name: plantName, description: plantDescription })}
+                disabled={!plantName.trim() || !plantDescription.trim()}
+              />
             </View>
           </View>
         </View>
@@ -115,7 +216,6 @@ const styles = StyleSheet.create({
     padding: 10,
   },
   plantItem: {
-    flex: 1,
     padding: 15,
     marginBottom: 10,
     backgroundColor: '#fff',
@@ -127,13 +227,13 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   plantName: {
-    textAlign:'center',
+    textAlign: 'center',
     fontSize: 18,
     fontWeight: 'bold',
     marginBottom: 5,
   },
   plantDescription: {
-    textAlign:'center',
+    textAlign: 'center',
     fontSize: 14,
     color: '#666',
   },
@@ -179,9 +279,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
+  apiPlantItem: {
+    padding: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#ddd',
+  },
+  apiPlantName: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    marginBottom: 5,
+  },
+  apiPlantScientificName: {
+    fontSize: 14,
+    color: '#666',
+  },
+  divider: {
+    marginTop: 15,
+    marginBottom: 10,
+    flexDirection: 'row',
     alignItems: 'center',
+  },
+  dividerText: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    marginHorizontal: 10,
+  },
+  apiLoading: {
+    marginVertical: 10,
+  },
+  apiPlantsList: {
+    maxHeight: 200,
+    marginBottom: 10,
   },
 });

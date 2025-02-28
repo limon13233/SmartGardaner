@@ -54,6 +54,13 @@ class PlantViewSet(viewsets.ModelViewSet):
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
 
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        if instance.user != request.user:
+            return Response({'error': 'You do not have permission to delete this plant.'}, status=status.HTTP_403_FORBIDDEN)
+        self.perform_destroy(instance)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+
 class SensorTypeViewSet(viewsets.ModelViewSet):
     queryset = SensorType.objects.all()
     serializer_class = SensorTypeSerializer

@@ -16,7 +16,7 @@ Adafruit_SSD1306 display(128, 32, &Wire, OLED_RESET);
 // Настройка датчика DHT22
 #define DHTPIN 5 // Вывод, к которому подключается датчик
 #define DHTTYPE DHT22
-#define SENSOR_1_PIN 34
+#define SOIL_MOISTURE_PIN 36
 DHT dht(DHTPIN, DHTTYPE);
 
 // Настройка точки доступа
@@ -185,7 +185,7 @@ void printSensorData() {
   // Читаем данные с датчика DHT22
   float humidity = dht.readHumidity(); // Влажность
   float temperature = dht.readTemperature(); // Температура
-
+  float soil_humidity = analogRead(SOIL_MOISTURE_PIN);
   // Проверяем корректность данных
   if (isnan(humidity) || isnan(temperature)) {
     Serial.println("Failed to read from DHT sensor!");
@@ -212,6 +212,11 @@ void printSensorData() {
   display.setCursor(0, 16);
   display.print(F("Hum: "));
   display.print(humidity);
+  display.print(F(" %"));
+
+  display.setCursor(0, 32);
+  display.print(F("soil_Hum: "));
+  display.print(soil_humidity);
   display.print(F(" %"));
   display.display();
 
@@ -286,15 +291,15 @@ void setup() {
 
 void loop() {
   if (token.length() > 0) {
-    int sensor1Value = analogRead(SENSOR_1_PIN);
-    int digitalSensorValue = digitalRead(DHTPIN);
+    int sensor_soil = analogRead(SOIL_MOISTURE_PIN);
+    int DHT_sensor = digitalRead(DHTPIN);
 
-    if (sensor1Value == HIGH) {
-      Serial.println("Sensor 1 is connected.");
+    if (sensor_soil == HIGH) {
+      Serial.println("sensor_soil is connected.");
     }
 
-    if (digitalSensorValue == HIGH) {
-      Serial.println("Sensor 2 is connected.");
+    if (DHT_sensor == HIGH) {
+      Serial.println("DHT_sensor is connected.");
     }
     // Вызываем функцию для чтения данных с датчика и отправки их на сервер
     printSensorData();
@@ -304,10 +309,3 @@ void loop() {
   }
   server.handleClient();
 }
-//датчик влажности и температуры --> приточка, вытяжка
-//датчик влажности почвы --> носос
-//датчик освещения --> лампы
-//...
-//
-//
-//
