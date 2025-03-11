@@ -72,8 +72,6 @@
     [ "esp:GND.2", "bb2:tn.1", "black", [ "v0" ] ],
     [ "dht1:GND", "bb2:tn.2", "black", [ "h38.4", "v-57.5" ] ],
     [ "oled1:GND", "bb2:tn.3", "black", [ "h-48", "v105.7" ] ],
-    [ "r2:1", "bb2:1t.d", "", [ "$bb" ] ],
-    [ "r2:2", "bb2:1b.h", "", [ "$bb" ] ],
     [ "dht1:SDA", "bb2:1t.c", "yellow", [ "v0" ] ],
     [ "esp:5", "bb2:1t.b", "yellow", [ "h0" ] ],
     [ "bb2:1b.j", "bb2:bp.3", "green", [ "v0" ] ],
@@ -93,7 +91,12 @@
     [ "ldr1:VCC", "bb2:tp.50", "red", [ "h0" ] ],
     [ "ldr1:GND", "bb2:tn.50", "black", [ "h0" ] ],
     [ "ldr1:DO", "bb2:60t.a", "green", [ "h0" ] ],
-    [ "bb2:60t.e", "esp:16", "green", [ "v9.6", "h-460.8", "v0", "h-124.8", "v374.4" ] ]
+    [ "bb2:60t.e", "esp:16", "green", [ "v9.6", "h-460.8", "v0", "h-124.8", "v374.4" ] ],
+    [ "r2:1", "bb2:1t.d", "", [ "$bb" ] ],
+    [ "r2:2", "bb2:1b.h", "", [ "$bb" ] ],
+    [ "bb2:37b.i", "esp:25", "green", [ "v0" ] ],
+    [ "bb2:38b.i", "esp:26", "green", [ "v0" ] ],
+    [ "bb2:39b.i", "esp:27", "green", [ "v0" ] ]
   ],
   "dependencies": {}
 }
